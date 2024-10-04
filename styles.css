@@ -1,0 +1,56 @@
+body {
+    background: url('https://images.unsplash.com/photo-1594972934984-57cb032c86d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGJvb2t8ZW58MHx8fHwxNjc5NTM5MTA2&ixlib=rb-4.0.3&q=80&w=1080') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+.container {
+    margin-top: 40px;
+    max-width: 900px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+h2 {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+.card {
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 12px;
+    padding: 20px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.btn-custom {
+    background-color: #3498db;
+    color: #fff;
+    border-radius: 30px;
+    padding: 10px 25px;
+    font-size: 18px;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+    width: 100%;
+}
+.btn-custom:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px);
+}
+.btn-edit, .btn-delete {
+    border-radius: 10px;
+    margin: 0 5px;
+}
+.book-card {
+    transition: transform 0.2s;
+}
+.book-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+.alert {
+    margin-top: 20px;
+    font-size: 16px;
+}
