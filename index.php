@@ -1,24 +1,30 @@
 <?php
-include 'dbinit.php'; // Include the database initialization script
+include 'dbinit.php'; 
 
-// Initialize variables
-$addSuccess = false;
-$addError = false;
-$updateSuccess = false;
-$deleteSuccess = false;
+$servername = "localhost";
+$username = "root"; 
+$password = ""; 
+$dbname = "book_inventory"; 
 
-// Initialize variables for book form
-$bookName = "";
-$author = "";
-$description = "";
-$quantity = "";
-$price = "";
-$genre = "";
-$editBookID = 0;
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Initialize variables 
+$bookName = '';
+$author = '';
+$description = '';
+$quantity = 0;
+$price = 0;
+$genre = '';
+$editBookID = null; 
 
 // Handle Create, Update, and Delete requests
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Check if 'action' is set
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
@@ -33,11 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $productAddedBy = 'Manav'; 
 
             $stmt = $conn->prepare("INSERT INTO books (BookName, Author, Description, Quantity, Price, Genre, ProductAddedBy) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssids", $bookName, $author, $description, $quantity, $price, $genre, $productAddedBy);
+            $stmt->bind_param("sssids", $bookName, $author, $description, $quantity, $price, $genre, $productAddedBy);
 
             if ($stmt->execute()) {
                 $addSuccess = true;
-                $bookName = $author = $description = $quantity = $price = $genre = ""; // Clear form fields
             } else {
                 $addError = "An error occurred while adding the book: " . $stmt->error;
             }
@@ -45,20 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif ($action == 'edit') {
             // Update an existing book
             $editBookID = intval($_POST['editBookID']);
-            $bookName = $_POST['BookName'] ?? '';
-            $author = $_POST['Author'] ?? '';
-            $description = $_POST['Description'] ?? '';
-            $quantity = intval($_POST['Quantity'] ?? 0);
-            $price = floatval($_POST['Price'] ?? 0);
-            $genre = $_POST['Genre'] ?? '';
-
-            $stmt = $conn->prepare("UPDATE books SET BookName=?, Author=?, Description=?, Quantity=?, Price=?, Genre=? WHERE BookID=?");
-            $stmt->bind_param("sssid", $bookName, $author, $description, $quantity, $price, $genre, $editBookID);
-
-            if ($stmt->execute()) {
-                $updateSuccess = true;
-            } else {
-                $addError = "An error occurred while updating the book: " . $stmt->error;
+            $stmt = $conn->prepare("SELECT * FROM books WHERE BookID=?");
+            $stmt->bind_param("i", $editBookID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
+                $book = $result->fetch_assoc();
+                $bookName = $book['BookName'];
+                $author = $book['Author'];
+                $description = $book['Description'];
+                $quantity = $book['Quantity'];
+                $price = $book['Price'];
+                $genre = $book['Genre'];
             }
             $stmt->close();
         } elseif ($action == 'delete') {
@@ -80,13 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Retrieve all books
 $books = [];
 $result = $conn->query("SELECT * FROM books");
+
+if (!$result) {
+    die("Query failed: " . $conn->error); 
+}
+
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $books[] = $row;
     }
 }
 
-// Close the connection
+// Close the connection 
 $conn->close();
 ?>
 
@@ -95,77 +103,71 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Inventory Admin Portal</title>
+    <title>Book Inventory</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
 <div class="container">
-    <h2>Book Inventory Management</h2>
-    
-    <!-- Add / Edit Book Form -->
+    <h2>Book Inventory</h2>
     <div class="card">
-        <form action="index.php" method="post">
-            <div class="form-group">
+        <form action="index.php" method="post" style="border: none;">
+            <div class="form-group mb-3">
                 <input type="hidden" name="editBookID" value="<?= $editBookID; ?>">
                 <label for="BookName">Book Name</label>
                 <input type="text" name="BookName" class="form-control" value="<?= htmlspecialchars($bookName); ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="Author">Author</label>
                 <input type="text" name="Author" class="form-control" value="<?= htmlspecialchars($author); ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="Description">Description</label>
-                <textarea name="Description" class="form-control" rows="3" required><?= htmlspecialchars($description); ?></textarea>
+                <textarea name="Description" class="form-control" required><?= htmlspecialchars($description); ?></textarea>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="Quantity">Quantity</label>
                 <input type="number" name="Quantity" class="form-control" value="<?= htmlspecialchars($quantity); ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-4">
                 <label for="Price">Price</label>
-                <input type="number" step="0.01" name="Price" class="form-control" value="<?= htmlspecialchars($price); ?>" required>
+                <input type="text" name="Price" class="form-control" value="<?= htmlspecialchars($price); ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-4">
                 <label for="Genre">Genre</label>
                 <input type="text" name="Genre" class="form-control" value="<?= htmlspecialchars($genre); ?>" required>
             </div>
-            <input type="hidden" name="action" value="<?= $editBookID ? 'edit' : 'add'; ?>">
-            <button type="submit" class="btn btn-custom"><?= $editBookID ? 'Update Book' : 'Add New Book'; ?></button>
-            <?php if ($addSuccess): ?>
-                <div class="alert alert-success">Book added successfully!</div>
-            <?php elseif ($updateSuccess): ?>
-                <div class="alert alert-success">Book updated successfully!</div>
-            <?php elseif ($deleteSuccess): ?>
-                <div class="alert alert-success">Book deleted successfully!</div>
-            <?php elseif ($addError): ?>
-                <div class="alert alert-danger"><?= $addError; ?></div>
-            <?php endif; ?>
+            <div class="d-flex justify-content-between">
+                <button type="submit" name="action" value="add" class="btn btn-primary">Add Book</button>
+                <button type="submit" name="action" value="edit" class="btn btn-warning">Update Book</button>
+            </div>
         </form>
     </div>
-
-    <!-- Display All Books -->
-    <h3>Current Inventory</h3>
-    <?php foreach ($books as $book): ?>
-        <div class="card book-card">
-            <h5><?= htmlspecialchars($book['BookName']); ?></h5>
-            <p><strong>Author:</strong> <?= htmlspecialchars($book['Author']); ?></p>
-            <p><strong>Description:</strong> <?= htmlspecialchars($book['Description']); ?></p>
-            <p><strong>Quantity:</strong> <?= htmlspecialchars($book['Quantity']); ?></p>
-            <p><strong>Price:</strong> $<?= htmlspecialchars($book['Price']); ?></p>
-            <p><strong>Genre:</strong> <?= htmlspecialchars($book['Genre']); ?></p>
-            <p><strong>Added By:</strong> <?= htmlspecialchars($book['ProductAddedBy']); ?></p>
-            <form action="index.php" method="post" style="display: inline;">
-                <input type="hidden" name="editBookID" value="<?= $book['BookID']; ?>">
-                <button type="submit" class="btn btn-edit btn-warning" name="action" value="edit">Edit</button>
-            </form>
-            <form action="index.php" method="post" style="display: inline;">
-                <input type="hidden" name="deleteBookID" value="<?= $book['BookID']; ?>">
-                <button type="submit" class="btn btn-delete btn-danger" name="action" value="delete">Delete</button>
-            </form>
-        </div>
-    <?php endforeach; ?>
+    <h3 class="mt-5">Books in Inventory</h3>
+    <div class="row">
+        <?php foreach ($books as $book): ?>
+            <div class="col-md-4">
+                <div class="card book-card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($book['BookName']); ?></h5>
+                        <p class="card-text">Author: <?= htmlspecialchars($book['Author']); ?></p>
+                        <p class="card-text">Description: <?= htmlspecialchars($book['Description']); ?></p>
+                        <p class="card-text">Quantity: <?= htmlspecialchars($book['Quantity']); ?></p>
+                        <p class="card-text">Price: $<?= htmlspecialchars($book['Price']); ?></p>
+                        <p class="card-text">Genre: <?= htmlspecialchars($book['Genre']); ?></p>
+                        <form method="post" action="index.php" class="d-inline">
+                            <input type="hidden" name="deleteBookID" value="<?= $book['BookID']; ?>">
+                            <button type="submit" name="action" value="delete" class="btn btn-danger">Delete</button>
+                        </form>
+                        <form method="post" action="index.php" class="d-inline">
+                            <input type="hidden" name="editBookID" value="<?= $book['BookID']; ?>">
+                            <button type="submit" name="action" value="edit" class="btn btn-success">Edit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
 </div>
 </body>
 </html>
